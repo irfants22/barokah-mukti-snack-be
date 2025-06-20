@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String  @id @default(cuid())
+  name     String  @db.VarChar(100)
+  email    String  @unique @db.VarChar(100)
+  password String  @db.VarChar(25)
+  phone    String  @db.VarChar(25)
+  gender   Gender?
+  address  String? @db.Text
+  image    String? @db.Text
+  is_admin Boolean @default(false)
+  token    String? @db.VarChar(100)
+
+  cart_items    CartItem[]
+  orders        Order[]
+  notifications Notification[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Gender {
+  LAKI_LAKI
+  PEREMPUAN
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  name        String          @db.VarChar(100)
+  price       Int             @db.Integer
+  stock       Int             @db.Integer
+  description String          @db.Text
+  image       String?         @db.Text
+  category    ProductCategory
+
+  cart_items  CartItem[]
+  order_items OrderItem[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("products")
+}
+
+enum ProductCategory {
+  MAKANAN_RINGAN
+  KUE_KERING
+}
+
+model CartItem {
+  id       String @id @default(cuid())
+  price    Int    @db.Integer
+  quantity Int    @db.Integer
+
+  user_id    String
+  user       User    @relation(fields: [user_id], references: [id])
+  product_id String
+  product    Product @relation(fields: [product_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("cart_items")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  status      OrderStatus @default(DIPROSES)
+  total_price Int         @db.Integer
+  order_time  DateTime    @default(now())
+
+  user_id     String
+  user        User        @relation(fields: [user_id], references: [id])
+  order_items OrderItem[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  DIPROSES
+  DIBAYAR
+  DIKIRIM
+  SELESAI
+  DIBATALKAN
+}
+
+model OrderItem {
+  id       String @id @default(cuid())
+  price    Int    @db.Integer
+  quantity Int    @db.Integer
+
+  product_id String
+  product    Product @relation(fields: [product_id], references: [id])
+  order_id   String
+  order      Order   @relation(fields: [order_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("order_items")
+}
+
+model Notification {
+  id      String  @id @default(cuid())
+  message String  @db.Text
+  is_read Boolean @default(false)
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("notifications")
+}
