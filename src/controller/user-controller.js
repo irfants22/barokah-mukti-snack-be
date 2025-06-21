@@ -16,6 +16,7 @@ const login = async (req, res, next) => {
   try {
     const result = await userService.login(req.body);
     res.status(200).json({
+      message: "Pengguna berhasil login",
       data: result,
     });
   } catch (error) {
