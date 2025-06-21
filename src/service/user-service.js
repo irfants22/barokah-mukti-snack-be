@@ -1,8 +1,12 @@
 import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
-import { registerUserValidation } from "../validation/user-validation.js";
+import {
+  loginUserValidation,
+  registerUserValidation,
+} from "../validation/user-validation.js";
 import { validate } from "../validation/validation.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const register = async (request) => {
   const user = validate(registerUserValidation, request);
@@ -31,6 +35,52 @@ const register = async (request) => {
   });
 };
 
+const login = async (request) => {
+  const loginRequest = validate(loginUserValidation, request);
+
+  const user = await prismaClient.user.findUnique({
+    where: {
+      email: loginRequest.email,
+    },
+    select: {
+      id: true,
+      email: true,
+      password: true,
+    },
+  });
+
+  if (!user) {
+    throw new ResponseError(401, "Email atau Password salah");
+  }
+
+  const isPasswordValid = await bcrypt.compare(
+    loginRequest.password,
+    user.password
+  );
+
+  if (!isPasswordValid) {
+    throw new ResponseError(401, "Email atau password salah");
+  }
+
+  const jwtSecret = process.env.JWT_SECRET_KEY;
+  const token = jwt.sign({ id: user.id, email: user.email }, jwtSecret, {
+    expiresIn: "24h",
+  });
+
+  return prismaClient.user.update({
+    data: {
+      token,
+    },
+    where: {
+      email: user.email,
+    },
+    select: {
+      token: true,
+    },
+  });
+};
+
 export default {
   register,
+  login,
 };
