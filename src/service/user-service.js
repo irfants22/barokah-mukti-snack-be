@@ -80,7 +80,31 @@ const login = async (request) => {
   });
 };
 
+const getCurrentUser = async (userId) => {
+  const user = await prismaClient.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      name: true,
+      email: true,
+      password: true,
+      phone: true,
+      gender: true,
+      address: true,
+      image: true,
+    },
+  });
+
+  if (!user) {
+    throw new ResponseError(404, "Pengguna tidak ditemukan");
+  }
+
+  return user;
+};
+
 export default {
   register,
   login,
+  getCurrentUser,
 };

@@ -24,4 +24,16 @@ const login = async (req, res, next) => {
   }
 };
 
-export default { register, login };
+const getCurrentUser = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const result = await userService.getCurrentUser(userId);
+    res.status(200).json({
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default { register, login, getCurrentUser };
