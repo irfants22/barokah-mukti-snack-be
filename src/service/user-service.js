@@ -1,6 +1,7 @@
 import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
 import {
+  getAllUserValidation,
   loginUserValidation,
   registerUserValidation,
 } from "../validation/user-validation.js";
@@ -88,11 +89,12 @@ const getCurrentUser = async (userId) => {
     select: {
       name: true,
       email: true,
-      password: true,
       phone: true,
       gender: true,
       address: true,
       image: true,
+      created_at: true,
+      updated_at: true,
     },
   });
 
@@ -103,8 +105,72 @@ const getCurrentUser = async (userId) => {
   return user;
 };
 
+const getAllUser = async (request) => {
+  request = validate(getAllUserValidation, request);
+
+  const pageNumber = Math.max(1, Number(request.page) || 1);
+  const limitNumber = Math.max(1, Number(request.limit) || 10);
+  const offset = (pageNumber - 1) * limitNumber;
+
+  const allowedSortFields = ["name", "email", "phone", "gender", "created_at"];
+  const allowedSortOrder = ["asc", "desc"];
+
+  const sortBy = allowedSortFields.includes(request.sortBy)
+    ? request.sortBy
+    : "name";
+  const sortOrder = allowedSortOrder.includes(request.sortOrder)
+    ? request.sortOrder
+    : "asc";
+  const query = request.query;
+
+  const filters = query
+    ? {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
+          { phone: { contains: query, mode: "insensitive" } },
+        ],
+      }
+    : undefined;
+
+  const users = await prismaClient.user.findMany({
+    where: filters,
+    skip: offset,
+    take: limitNumber,
+    orderBy: {
+      [sortBy]: sortOrder,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      gender: true,
+      address: true,
+      image: true,
+      is_admin: true,
+      created_at: true,
+      updated_at: true,
+    },
+  });
+
+  const totalUsers = await prismaClient.user.count({
+    where: filters,
+  });
+
+  return {
+    data: users,
+    pagination: {
+      page: pageNumber,
+      total_page: Math.ceil(totalUsers / limitNumber),
+      total_users: totalUsers,
+    },
+  };
+};
+
 export default {
   register,
   login,
   getCurrentUser,
+  getAllUser,
 };
