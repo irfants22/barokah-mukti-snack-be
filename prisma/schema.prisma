@@ -24,7 +24,7 @@ model User {
   address  String? @db.Text
   image    String? @db.Text
   is_admin Boolean @default(false)
-  token    String? @db.VarChar(100)
+  token    String? @db.VarChar(255)
 
   cart_items    CartItem[]
   orders        Order[]
