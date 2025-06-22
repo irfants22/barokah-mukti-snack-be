@@ -77,10 +77,23 @@ const getAllUser = async (req, res, next) => {
   }
 };
 
+const logoutUser = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    await userService.logoutUser(userId);
+    res.status(200).json({
+      message: "Pengguna berhasil logout",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   register,
   login,
   getCurrentUser,
   updateCurrentProfile,
   getAllUser,
+  logoutUser,
 };

@@ -210,10 +210,32 @@ const getAllUser = async (request) => {
   };
 };
 
+const logoutUser = async (userId) => {
+  const user = await prismaClient.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    throw new ResponseError(404, "Pengguna tidak ditemukan");
+  }
+
+  return prismaClient.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      token: null,
+    },
+  });
+};
+
 export default {
   register,
   login,
   getCurrentUser,
   updateCurrentProfile,
   getAllUser,
+  logoutUser,
 };
