@@ -6,9 +6,10 @@ import upload from "../middleware/upload.js";
 const authorizedRouter = Router();
 authorizedRouter.use(isAuthorized);
 
-// User API (user)
+// User API (public)
 authorizedRouter.get("/api/user/me", userController.getCurrentUser);
 authorizedRouter.put("/api/user/me", upload.single("image"), userController.updateCurrentProfile);
+authorizedRouter.delete("/api/user/logout", userController.logoutUser);
 
 // User API (admin)
 authorizedRouter.get("/api/admin/user", userController.getAllUser);
