@@ -3,7 +3,7 @@ import userService from "../service/user-service.js";
 const register = async (req, res, next) => {
   try {
     const result = await userService.register(req.body);
-    res.status(200).json({
+    res.status(201).json({
       message: "Pengguna berhasil mendaftar",
       data: result,
     });
@@ -36,6 +36,31 @@ const getCurrentUser = async (req, res, next) => {
   }
 };
 
+const updateCurrentProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const image = req.file;
+    const request = {
+      name: req.body.name,
+      email: req.body.email,
+      phone: req.body.phone,
+      gender: req.body.gender,
+      address: req.body.address,
+    };
+    const result = await userService.updateCurrentProfile(
+      userId,
+      request,
+      image
+    );
+    res.status(200).json({
+      message: "Profil pengguna berhasil diperbarui",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getAllUser = async (req, res, next) => {
   try {
     const request = {
@@ -52,4 +77,10 @@ const getAllUser = async (req, res, next) => {
   }
 };
 
-export default { register, login, getCurrentUser, getAllUser };
+export default {
+  register,
+  login,
+  getCurrentUser,
+  updateCurrentProfile,
+  getAllUser,
+};
