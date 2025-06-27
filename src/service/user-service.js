@@ -231,6 +231,35 @@ const logoutUser = async (userId) => {
   });
 };
 
+const deleteUser = async (userId) => {
+  const user = await prismaClient.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    throw new ResponseError(404, "Pengguna tidak ditemukan");
+  }
+
+  if (user.is_admin) {
+    throw new ResponseError(403, "Tidak dapat menghapus akun admin");
+  }
+
+  if (user.token !== null) {
+    throw new ResponseError(
+      403,
+      "Tidak dapat menghapus pengguna yang sedang login"
+    );
+  }
+
+  return prismaClient.user.delete({
+    where: {
+      id: user.id,
+    },
+  });
+};
+
 export default {
   register,
   login,
@@ -238,4 +267,5 @@ export default {
   updateCurrentProfile,
   getAllUser,
   logoutUser,
+  deleteUser,
 };

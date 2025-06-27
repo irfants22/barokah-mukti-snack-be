@@ -89,6 +89,18 @@ const logoutUser = async (req, res, next) => {
   }
 };
 
+const deleteUser = async (req, res, next) => {
+  try {
+    const { id: userId } = req.body;
+    await userService.deleteUser(userId);
+    res.status(200).json({
+      message: "Pengguna berhasil dihapus",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   register,
   login,
@@ -96,4 +108,5 @@ export default {
   updateCurrentProfile,
   getAllUser,
   logoutUser,
+  deleteUser,
 };
