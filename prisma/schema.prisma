@@ -49,6 +49,8 @@ model Product {
   description String          @db.Text
   image       String?         @db.Text
   category    ProductCategory
+  packaging   Packaging
+  weight      Weight
 
   cart_items  CartItem[]
   order_items OrderItem[]
@@ -62,6 +64,18 @@ model Product {
 enum ProductCategory {
   MAKANAN_RINGAN
   KUE_KERING
+}
+
+enum Packaging {
+  TOPLES
+  BAL
+}
+
+enum Weight {
+  GRAM_250
+  GRAM_500
+  KG_1
+  KG_2
 }
 
 model CartItem {
@@ -85,10 +99,13 @@ model Order {
   status      OrderStatus @default(DIPROSES)
   total_price Int         @db.Integer
   order_time  DateTime    @default(now())
+  address     String?     @db.Text
+  notes       String?     @db.Text
 
   user_id     String
-  user        User        @relation(fields: [user_id], references: [id])
+  user        User         @relation(fields: [user_id], references: [id])
   order_items OrderItem[]
+  transaction Transaction?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -132,4 +149,31 @@ model Notification {
   updated_at DateTime @updatedAt
 
   @@map("notifications")
+}
+
+model Transaction {
+  id               String        @id @default(cuid())
+  transaction_id   String        @db.VarChar(100)
+  payment_type     String        @db.VarChar(50)
+  payment_code     String?       @db.VarChar(100)
+  gross_amount     Int           @db.Integer
+  transaction_time DateTime      @default(now())
+  paid_at          DateTime?
+  status           PaymentStatus @default(PENDING)
+
+  order_id String @unique
+  order    Order  @relation(fields: [order_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("transactions")
+}
+
+enum PaymentStatus {
+  PENDING
+  SUKSES
+  GAGAL
+  KADALUARSA
+  DIBATALKAN
 }
