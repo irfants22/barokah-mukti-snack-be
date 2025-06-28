@@ -46,7 +46,7 @@ model Product {
   name        String          @db.VarChar(100)
   price       Int             @db.Integer
   stock       Int             @db.Integer
-  description String          @db.Text
+  description String?         @db.Text
   image       String?         @db.Text
   category    ProductCategory
   packaging   Packaging
