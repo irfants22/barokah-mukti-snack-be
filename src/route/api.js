@@ -1,8 +1,9 @@
 import { Router } from "express";
+import upload from "../middleware/upload.js";
+import { isAuthorized } from "../middleware/auth-middleware.js";
 import userController from "../controller/user-controller.js";
 import productController from "../controller/product-controller.js";
-import { isAuthorized } from "../middleware/auth-middleware.js";
-import upload from "../middleware/upload.js";
+import cartController from "../controller/cart-controller.js";
 
 const authorizedRouter = Router();
 authorizedRouter.use(isAuthorized);
@@ -26,5 +27,11 @@ authorizedRouter.get("/api/admin/products/:productId", productController.getDeta
 authorizedRouter.post("/api/admin/products", upload.single("image"), productController.createProduct);
 authorizedRouter.put("/api/admin/products/:productId", upload.single("image"), productController.updateProduct);
 authorizedRouter.delete("/api/admin/products/:productId", productController.deleteProduct);
+
+// Cart API (public)
+authorizedRouter.get("/api/carts", cartController.getAllCart);
+authorizedRouter.post("/api/carts", cartController.createCart);
+authorizedRouter.put("/api/carts/:cartId", cartController.updateCart);
+authorizedRouter.delete("/api/carts/:cartId", cartController.deleteCart);
 
 export { authorizedRouter };
