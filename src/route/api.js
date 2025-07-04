@@ -5,6 +5,7 @@ import userController from "../controller/user-controller.js";
 import productController from "../controller/product-controller.js";
 import cartController from "../controller/cart-controller.js";
 import orderController from "../controller/order-controller.js";
+import notificationController from "../controller/notification-controller.js";
 
 const authorizedRouter = Router();
 authorizedRouter.use(isAuthorized);
@@ -41,5 +42,11 @@ authorizedRouter.post("/api/orders", orderController.createOrder);
 authorizedRouter.get("/api/orders/me", orderController.getCurrentOrder);
 authorizedRouter.get("/api/orders/:orderId", orderController.getOrderDetail);
 authorizedRouter.put("/api/orders/:orderId/status", orderController.updateOrder);
+
+// Notification API (public)
+authorizedRouter.get("/api/notifications", notificationController.getAllNotification)
+authorizedRouter.put("/api/notifications/read-all", notificationController.updateAllNotificationReadStatus)
+authorizedRouter.put("/api/notifications/:notificationId/read", notificationController.updateNotificationReadStatus)
+authorizedRouter.delete("/api/notifications/:notificationId", notificationController.deleteNotification)
 
 export { authorizedRouter };
