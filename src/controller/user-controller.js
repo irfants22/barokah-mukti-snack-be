@@ -2,7 +2,8 @@ import userService from "../service/user-service.js";
 
 const register = async (req, res, next) => {
   try {
-    const result = await userService.register(req.body);
+    const payload = req.body;
+    const result = await userService.register(payload);
     res.status(201).json({
       message: "Pengguna berhasil mendaftar",
       data: result,
@@ -14,7 +15,8 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   try {
-    const result = await userService.login(req.body);
+    const payload = req.body;
+    const result = await userService.login(payload);
     res.status(200).json({
       message: "Pengguna berhasil login",
       data: result,
