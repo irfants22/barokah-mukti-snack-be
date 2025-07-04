@@ -14,6 +14,7 @@ export const getAllOrder = async (request) => {
   const pageNumber = Math.max(1, Number(request.page) || 1);
   const limitNumber = Math.max(1, Number(request.limit) || 10);
   const offset = (pageNumber - 1) * limitNumber;
+  const sortOrder = request.sortOrder || "asc";
   const { status } = request;
 
   const filters = status ? { status } : {};
@@ -45,7 +46,7 @@ export const getAllOrder = async (request) => {
       transaction: true,
     },
     orderBy: {
-      order_time: "asc",
+      order_time: sortOrder,
     },
   });
 
@@ -89,7 +90,7 @@ export const getCurrentOrder = async (userId, status) => {
       transaction: true,
     },
     orderBy: {
-      order_time: "asc",
+      order_time: "desc",
     },
   });
 
