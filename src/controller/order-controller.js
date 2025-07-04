@@ -6,6 +6,7 @@ const getAllOrder = async (req, res, next) => {
       status: req.query.status,
       page: req.query.page,
       limit: req.query.limit,
+      sortOrder: req.query.sortOrder,
     };
     const result = await orderService.getAllOrder(request);
     res.status(200).json(result);
