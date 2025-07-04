@@ -4,6 +4,7 @@ import { isAuthorized } from "../middleware/auth-middleware.js";
 import userController from "../controller/user-controller.js";
 import productController from "../controller/product-controller.js";
 import cartController from "../controller/cart-controller.js";
+import orderController from "../controller/order-controller.js";
 
 const authorizedRouter = Router();
 authorizedRouter.use(isAuthorized);
@@ -33,5 +34,12 @@ authorizedRouter.get("/api/carts", cartController.getAllCart);
 authorizedRouter.post("/api/carts", cartController.createCart);
 authorizedRouter.put("/api/carts/:cartId", cartController.updateCart);
 authorizedRouter.delete("/api/carts/:cartId", cartController.deleteCart);
+
+// Order API (public)
+authorizedRouter.get("/api/orders", orderController.getAllOrder);
+authorizedRouter.post("/api/orders", orderController.createOrder);
+authorizedRouter.get("/api/orders/me", orderController.getCurrentOrder);
+authorizedRouter.get("/api/orders/:orderId", orderController.getOrderDetail);
+authorizedRouter.put("/api/orders/:orderId/status", orderController.updateOrder);
 
 export { authorizedRouter };
