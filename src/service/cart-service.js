@@ -111,8 +111,6 @@ const updateCart = async (cartId, request) => {
 };
 
 const deleteCart = async (cartId) => {
-  console.log(cartId);
-
   const isCartExist = await prismaClient.cartItem.findUnique({
     where: {
       id: cartId,
