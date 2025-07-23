@@ -7,6 +7,7 @@ const getAllOrder = async (req, res, next) => {
       page: req.query.page,
       limit: req.query.limit,
       sortOrder: req.query.sortOrder,
+      not: req.query.not,
     };
     const result = await orderService.getAllOrder(request);
     res.status(200).json(result);
@@ -28,9 +29,8 @@ const getCurrentOrder = async (req, res, next) => {
 
 const getOrderDetail = async (req, res, next) => {
   try {
-    const userId = req.user.id;
     const orderId = req.params.orderId;
-    const result = await orderService.getOrderDetail(userId, orderId);
+    const result = await orderService.getOrderDetail(orderId);
     res.status(200).json({
       data: result,
     });
@@ -39,11 +39,16 @@ const getOrderDetail = async (req, res, next) => {
   }
 };
 
-export const createOrder = async (req, res, next) => {
+const createOrder = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { address, notes } = req.body;
-    const result = await orderService.createOrder(userId, address, notes);
+    const { address, notes, other_costs } = req.body;
+    const result = await orderService.createOrder(
+      userId,
+      address,
+      notes,
+      other_costs
+    );
     res.status(201).json({
       message: "Pesanan berhasil dibuat",
       data: result,
@@ -53,7 +58,7 @@ export const createOrder = async (req, res, next) => {
   }
 };
 
-export const updateOrder = async (req, res, next) => {
+const updateOrder = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const orderId = req.params.orderId;
