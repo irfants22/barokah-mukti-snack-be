@@ -162,6 +162,10 @@ const updateProduct = async (productId, request, image) => {
     await fs.promises.unlink(image.path);
   }
 
+  if (request.stock) {
+    request.stock = existingProduct.stock + request.stock;
+  }
+
   const updatedProduct = await prismaClient.product.update({
     where: {
       id: productId,
