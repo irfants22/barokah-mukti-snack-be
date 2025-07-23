@@ -17,11 +17,9 @@ authorizedRouter.delete("/api/users/logout", userController.logoutUser);
 
 // User API (admin)
 authorizedRouter.get("/api/admin/users", isAdmin, userController.getAllUser);
+authorizedRouter.get("/api/admin/users/me", isAdmin, userController.getCurrentUser);
+authorizedRouter.put("/api/admin/users/me", isAdmin, upload.single("image"), userController.updateCurrentProfile);
 authorizedRouter.delete("/api/admin/users/delete", isAdmin, userController.deleteUser);
-
-// Product API (public)
-authorizedRouter.get("/api/products", productController.getAllProduct);
-authorizedRouter.get("/api/products/:productId", productController.getDetailProduct);
 
 // Product API (admin)
 authorizedRouter.get("/api/admin/products", isAdmin, productController.getAllProduct);
