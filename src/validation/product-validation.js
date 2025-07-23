@@ -4,7 +4,7 @@ const getAllProductValidation = Joi.object({
   query: Joi.string().optional(),
   category: Joi.string().valid("MAKANAN_RINGAN", "KUE_KERING").optional(),
   page: Joi.number().positive().min(1).default(1),
-  limit: Joi.number().max(10).default(10),
+  limit: Joi.number().max(100).default(10),
   sortBy: Joi.string().optional(),
   sortOrder: Joi.string()
     .valid("asc", "desc", "lowest_price", "highest_price")
