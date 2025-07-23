@@ -8,22 +8,22 @@ import {
   orderStatusValidation,
 } from "../validation/order-validation.js";
 
-export const getAllOrder = async (request) => {
+const getAllOrder = async (request) => {
   request = validate(getAllOrderValidation, request);
 
   const pageNumber = Math.max(1, Number(request.page) || 1);
   const limitNumber = Math.max(1, Number(request.limit) || 10);
   const offset = (pageNumber - 1) * limitNumber;
   const sortOrder = request.sortOrder || "asc";
-  const { status } = request;
+  const { status, not } = request;
 
-  const filters = status ? { status } : {};
+  const filters = {};
 
-  const totalOrders = await prismaClient.order.count({
-    where: filters,
-    skip: offset,
-    take: limitNumber,
-  });
+  if (status) filters.status = status;
+
+  if (not) {
+    filters.NOT = { status: not };
+  }
 
   const orders = await prismaClient.order.findMany({
     where: filters,
@@ -50,13 +50,21 @@ export const getAllOrder = async (request) => {
     },
   });
 
+  const totalOrders = await prismaClient.order.count({
+    where: filters,
+  });
+
   return {
     data: orders,
-    total_orders: totalOrders,
+    pagination: {
+      page: pageNumber,
+      total_page: Math.ceil(totalOrders / limitNumber),
+      total_orders: totalOrders,
+    },
   };
 };
 
-export const getCurrentOrder = async (userId, status) => {
+const getCurrentOrder = async (userId, status) => {
   status = validate(orderStatusValidation, status);
 
   const filters = status ? { status } : {};
@@ -100,7 +108,7 @@ export const getCurrentOrder = async (userId, status) => {
   };
 };
 
-export const getOrderDetail = async (userId, orderId) => {
+const getOrderDetail = async (orderId) => {
   const isOrderExist = await prismaClient.order.findUnique({
     where: {
       id: orderId,
@@ -114,7 +122,6 @@ export const getOrderDetail = async (userId, orderId) => {
   const order = await prismaClient.order.findFirst({
     where: {
       id: orderId,
-      user_id: userId,
     },
     include: {
       user: {
@@ -140,7 +147,7 @@ export const getOrderDetail = async (userId, orderId) => {
   return order;
 };
 
-export const createOrder = async (userId, address, notes) => {
+const createOrder = async (userId, address, notes, other_costs) => {
   const cartItems = await prismaClient.cartItem.findMany({
     where: { user_id: userId },
     include: { product: true },
@@ -150,18 +157,9 @@ export const createOrder = async (userId, address, notes) => {
     throw new ResponseError(400, "Keranjang belanja anda kosong");
   }
 
-  const totalPrice = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
+  const orderCost = cartItems.reduce((total, item) => total + item.price, 0);
 
-  // const isOrderExist = await prismaClient.order.findFirst({
-  //   where: { user_id: userId, status: "DIPROSES" },
-  // });
-
-  // if (isOrderExist) {
-  //   throw new ResponseError(409, "Pesanan anda sedang diproses");
-  // }
+  const totalPrice = orderCost + other_costs;
 
   const order = await prismaClient.order.create({
     data: {
@@ -192,7 +190,7 @@ export const createOrder = async (userId, address, notes) => {
 
   const snapResponse = await snap.createTransaction({
     transaction_details: {
-      order_id: transactionId,
+      order_id: order.id,
       gross_amount: totalPrice,
     },
     customer_details: {
@@ -200,6 +198,9 @@ export const createOrder = async (userId, address, notes) => {
       email: order.user.email,
     },
     enabled_payments: ["bca_va"],
+    callbacks: {
+      finish: "http://localhost:5173/my-order",
+    },
   });
 
   await prismaClient.transaction.create({
@@ -214,13 +215,20 @@ export const createOrder = async (userId, address, notes) => {
   await prismaClient.notification.create({
     data: {
       user_id: userId,
-      message: `Pesanan #${transactionId} berhasil dibuat.`,
+      message: `Pesanan #${order.id} berhasil dibuat.`,
     },
   });
 
   const admin = await prismaClient.user.findFirst({
     where: {
       is_admin: true,
+    },
+  });
+
+  await prismaClient.notification.create({
+    data: {
+      user_id: admin.id,
+      message: `Pesanan #${order.id} berhasil dibuat.`,
     },
   });
 
@@ -233,11 +241,22 @@ export const createOrder = async (userId, address, notes) => {
     const product = await prismaClient.product.findUnique({
       where: { id: item.product_id },
     });
-    if (product.stock - item.quantity < rop) {
+
+    const remainingStock = product.stock - item.quantity;
+
+    if (remainingStock < rop && remainingStock > 10) {
       await prismaClient.notification.create({
         data: {
           user_id: admin.id,
-          message: `Stok produk ${product.name} menipis. Segera lakukan restok!`,
+          message: `Stok produk ${product.name} menipis. Segera lakukan restok!.`,
+        },
+      });
+    }
+    if (remainingStock < 10) {
+      await prismaClient.notification.create({
+        data: {
+          user_id: admin.id,
+          message: `Stok produk ${product.name} tersisa ${remainingStock} buah. Segera lakukan restok!.`,
         },
       });
     }
@@ -250,19 +269,17 @@ export const createOrder = async (userId, address, notes) => {
     });
   }
 
-  // await prismaClient.cartItem.deleteMany({ where: { user_id: userId } });
+  await prismaClient.cartItem.deleteMany({ where: { user_id: userId } });
 
   return {
-    orderId: order.id,
+    order_id: order.id,
     snap_token: snapResponse.token,
     redirect_url: snapResponse.redirect_url,
   };
 };
 
-export const updateOrder = async (userId, orderId, status) => {
+const updateOrder = async (userId, orderId, status) => {
   status = validate(orderStatusValidation, status);
-
-  console.log(status);
 
   const isUserExist = await prismaClient.user.findUnique({
     where: {
@@ -277,7 +294,6 @@ export const updateOrder = async (userId, orderId, status) => {
   const isOrderExist = await prismaClient.order.findFirst({
     where: {
       id: orderId,
-      user_id: userId,
     },
   });
 
@@ -288,9 +304,37 @@ export const updateOrder = async (userId, orderId, status) => {
   const updatedOrder = await prismaClient.order.update({
     where: {
       id: orderId,
-      user_id: userId,
     },
     data: { status },
+  });
+
+  const admin = await prismaClient.user.findFirst({
+    where: {
+      is_admin: true,
+    },
+  });
+
+  const orderOwner = await prismaClient.user.findFirst({
+    where: {
+      id: isOrderExist.user_id,
+    },
+  });
+
+  const capitalizeStatus =
+    status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+  await prismaClient.notification.create({
+    data: {
+      user_id: admin.id,
+      message: `Pesanan #${isOrderExist.id} telah ${capitalizeStatus}.`,
+    },
+  });
+
+  await prismaClient.notification.create({
+    data: {
+      user_id: orderOwner.id,
+      message: `Pesanan #${isOrderExist.id} telah ${capitalizeStatus}.`,
+    },
   });
 
   return updatedOrder;
