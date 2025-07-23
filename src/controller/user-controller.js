@@ -42,7 +42,7 @@ const updateCurrentProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const image = req.file;
-    const request = {
+    const payload = {
       name: req.body.name,
       email: req.body.email,
       phone: req.body.phone,
@@ -51,11 +51,11 @@ const updateCurrentProfile = async (req, res, next) => {
     };
     const result = await userService.updateCurrentProfile(
       userId,
-      request,
+      payload,
       image
     );
     res.status(200).json({
-      message: "Profil pengguna berhasil diperbarui",
+      message: "Informasi pengguna berhasil diperbarui",
       data: result,
     });
   } catch (error) {
@@ -65,14 +65,14 @@ const updateCurrentProfile = async (req, res, next) => {
 
 const getAllUser = async (req, res, next) => {
   try {
-    const request = {
+    const payload = {
       query: req.query.query,
       page: req.query.page,
       limit: req.query.limit,
       sortBy: req.query.sortBy,
       sortOrder: req.query.sortOrder,
     };
-    const result = await userService.getAllUser(request);
+    const result = await userService.getAllUser(payload);
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -103,6 +103,18 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+const createAdminUser = async (_req, res, next) => {
+  try {
+    const result = await userService.createAdminUser();
+    res.status(201).json({
+      message: "Admin berhasil dibuat",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   register,
   login,
@@ -111,4 +123,5 @@ export default {
   getAllUser,
   logoutUser,
   deleteUser,
+  createAdminUser,
 };
