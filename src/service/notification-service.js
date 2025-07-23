@@ -22,6 +22,9 @@ const getAllNotification = async (userId) => {
     where: {
       user_id: userId,
     },
+    orderBy: {
+      created_at: "desc",
+    },
   });
 
   return {
