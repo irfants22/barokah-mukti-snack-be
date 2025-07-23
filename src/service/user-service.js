@@ -29,7 +29,7 @@ const register = async (request) => {
 
   user.is_admin = false;
 
-  return prismaClient.user.create({
+  const newUser = await prismaClient.user.create({
     data: user,
     select: {
       name: true,
@@ -37,6 +37,8 @@ const register = async (request) => {
       phone: true,
     },
   });
+
+  return newUser;
 };
 
 const login = async (request) => {
@@ -71,7 +73,7 @@ const login = async (request) => {
     expiresIn: "24h",
   });
 
-  return prismaClient.user.update({
+  const loggedInUser = await prismaClient.user.update({
     data: {
       token,
     },
@@ -80,12 +82,15 @@ const login = async (request) => {
     },
     select: {
       token: true,
+      is_admin: true,
     },
   });
+
+  return loggedInUser;
 };
 
 const getCurrentUser = async (userId) => {
-  const user = await prismaClient.user.findUnique({
+  const currentUser = await prismaClient.user.findUnique({
     where: {
       id: userId,
     },
@@ -101,11 +106,11 @@ const getCurrentUser = async (userId) => {
     },
   });
 
-  if (!user) {
+  if (!currentUser) {
     throw new ResponseError(404, "Pengguna tidak ditemukan");
   }
 
-  return user;
+  return currentUser;
 };
 
 const updateCurrentProfile = async (userId, request, image) => {
@@ -260,6 +265,30 @@ const deleteUser = async (userId) => {
   });
 };
 
+const createAdminUser = async () => {
+  const existingAdmin = await prismaClient.user.findFirst({
+    where: { is_admin: true },
+  });
+
+  if (existingAdmin) {
+    throw new ResponseError(400, "Admin sudah terdaftar");
+  }
+
+  const newAdmin = await prismaClient.user.create({
+    data: {
+      name: "Admin",
+      email: "admin@gmail.com",
+      password: hashedPassword,
+      phone: "08123456789",
+      gender: "LAKI_LAKI",
+      address: "Jl. Melati No. 123",
+      is_admin: true,
+    },
+  });
+  console.log("Admin user created");
+  return newAdmin;
+};
+
 export default {
   register,
   login,
@@ -268,4 +297,5 @@ export default {
   getAllUser,
   logoutUser,
   deleteUser,
+  createAdminUser,
 };
