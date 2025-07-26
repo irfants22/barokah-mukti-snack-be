@@ -64,9 +64,12 @@ const createCart = async (userId, productId, request) => {
     throw new ResponseError(404, "Produk tidak ditemukan");
   }
 
+  const totalPrice = request.quantity * request.price;
+
   const newCart = await prismaClient.cartItem.create({
     data: {
-      ...request,
+      price: totalPrice,
+      quantity: request.quantity,
       user: {
         connect: { id: userId },
       },
